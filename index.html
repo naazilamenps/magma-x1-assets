@@ -55,7 +55,7 @@
         <canvas class="sequence" aria-hidden="true"></canvas>
         <div class="card-viewport" aria-hidden="true">
           <div class="card-track">
-            <img src="./assets/feature-cards.png" alt="" />
+            <img src="./assets/feature-cards.webp" alt="" />
           </div>
         </div>
         <div class="scroll-cue" aria-hidden="true"><i></i></div>
@@ -64,7 +64,7 @@
     <script>
     (() => {
       const frameCount = 17;
-      const framePath = (index) => `./assets/frames/ezgif-frame-${String(index + 1).padStart(3, "0")}.png`;
+      const framePath = (index) => `./assets/frames/ezgif-frame-${String(index + 1).padStart(3, "0")}.webp`;
       const canvas = document.querySelector(".sequence");
       const ctx = canvas.getContext("2d", { alpha: false });
       const section = document.querySelector(".magma-scroll");
