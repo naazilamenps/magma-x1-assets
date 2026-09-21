@@ -3,214 +3,274 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="description" content="MAGMA X1 — Built for a rougher tomorrow. Engineered from within." />
-  <title>MAGMA X1 — Engineered From Within</title>
+  <meta name="description" content="MAGMA X1 — Built from pressure. A performance e-bike forged for the terrain beyond the road." />
+  <title>MAGMA X1 — Built From Pressure</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <style>
-    /* ============ RESET & GLOBALS ============ */
+    /* ============ RESET ============ */
     :root {
-      --mx-bg: #1e1e1c;
-      --mx-bg-deep: #0a0a0a;
-      --mx-text-primary: #F7F7F7;
-      --mx-text-secondary: #9a9a9a;
-      --mx-accent: #c9502f;
-      color-scheme: dark;
+      --mx-bg: #1e1e1c; --mx-bg-deep: #0a0a0a;
+      --mx-text: #F7F7F7; --mx-text-dim: #9a9a9a;
+      --mx-accent: #c9502f; color-scheme: dark;
     }
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body {
-      min-height: 100%;
-      background: var(--mx-bg);
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
-      color: var(--mx-text-primary);
+    html { background: #000; }
+    body {
+      min-height: 100%; background: #000; overflow-x: hidden;
+      font-family: 'Inter', -apple-system, sans-serif; color: var(--mx-text);
     }
-    body { overflow-x: hidden; }
+    /* Hide scrollbar during intro */
+    body.intro-active { overflow: hidden; }
 
-    /* ============ SECTION 1: SCROLL-FRAME + FEATURE CARDS ============ */
+    /* ============ INTRO OVERLAY ============ */
+    .intro {
+      position: fixed; inset: 0; z-index: 100;
+      background: #000; display: flex;
+      align-items: center; justify-content: center;
+      transition: opacity 0.8s cubic-bezier(0.33, 0, 0.2, 1);
+    }
+    .intro.is-exiting {
+      opacity: 0; pointer-events: none;
+    }
+    .intro.is-hidden { display: none; }
+
+    /* Canvas fills viewport */
+    .intro-canvas {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%; display: block;
+    }
+
+    /* MAGMA watermark text behind the rock */
+    .intro-watermark {
+      position: absolute; z-index: 1;
+      top: 50%; left: 50%; transform: translate(-50%, -50%);
+      font-size: clamp(80px, 18vw, 280px);
+      font-weight: 900; letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: transparent;
+      background: linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%);
+      -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent;
+      user-select: none; pointer-events: none;
+      opacity: 0;
+      transition: opacity 1s ease;
+    }
+    .intro-watermark.is-visible { opacity: 1; }
+    .intro-watermark.is-fading { opacity: 0; transition: opacity 0.4s ease; }
+
+    /* White flash for blast peak */
+    .intro-flash {
+      position: absolute; inset: 0; z-index: 3;
+      background: #fff; opacity: 0;
+      pointer-events: none;
+    }
+
+    /* Cursor element */
+    .intro-cursor {
+      position: absolute; z-index: 10;
+      width: 24px; height: 24px;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .intro-cursor svg {
+      width: 100%; height: 100%;
+      filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5));
+    }
+    .intro-cursor.is-clicking {
+      transform: scale(0.85);
+      transition: transform 0.12s ease;
+    }
+
+    /* Circular Explore button */
+    .intro-explore {
+      position: absolute; z-index: 8;
+      left: 50%; top: 50%; transform: translate(-50%, -50%) scale(0.6);
+      width: 100px; height: 100px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.04);
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; opacity: 0;
+      transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+                  border-color 0.3s ease, background 0.3s ease;
+      pointer-events: none;
+    }
+    .intro-explore.is-visible {
+      opacity: 1; transform: translate(-50%, -50%) scale(1);
+      pointer-events: all;
+    }
+    .intro-explore:hover {
+      border-color: rgba(255, 255, 255, 0.6);
+      background: rgba(255, 255, 255, 0.08);
+    }
+    .intro-explore span {
+      font-size: 11px; font-weight: 600;
+      letter-spacing: 0.16em; text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.85);
+    }
+    /* Pulse ring */
+    .intro-explore::before {
+      content: ''; position: absolute; inset: -6px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      animation: explore-pulse 2.5s ease-in-out infinite;
+    }
+    @keyframes explore-pulse {
+      0%, 100% { transform: scale(1); opacity: 0.5; }
+      50% { transform: scale(1.12); opacity: 0; }
+    }
+
+    /* Mobile tap hint */
+    .intro-tap-hint {
+      position: absolute; z-index: 8;
+      left: 50%; bottom: calc(50% - 80px);
+      transform: translateX(-50%);
+      font-size: 11px; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--mx-text-dim);
+      opacity: 0; transition: opacity 0.6s ease;
+    }
+    .intro-tap-hint.is-visible { opacity: 0.6; }
+
+    /* ============ SECTION 1 ============ */
     .magma-scroll { height: 680vh; background: var(--mx-bg); }
     .magma-sticky {
       position: sticky; top: 0; height: 100svh;
       overflow: hidden; isolation: isolate; background: var(--mx-bg);
     }
-    .sequence {
-      position: absolute; inset: 0; width: 100%; height: 100%;
-      display: block; z-index: 0;
-    }
-    .card-viewport {
-      position: absolute; inset: 0; z-index: 1;
-      overflow: hidden; pointer-events: none;
-    }
+    .sequence { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 0; }
+    .card-viewport { position: absolute; inset: 0; z-index: 1; overflow: hidden; pointer-events: none; }
     .card-track {
       position: absolute; top: clamp(84px, 20svh, 220px); left: 0;
       height: clamp(124px, 17.2vw, 254px); padding: 5px;
-      border: 1px solid rgba(255, 255, 255, .10); border-radius: 5px;
-      background: rgba(10, 11, 10, .72);
-      box-shadow: 0 20px 50px rgba(0, 0, 0, .35);
-      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-      will-change: transform;
+      border: 1px solid rgba(255,255,255,.10); border-radius: 5px;
+      background: rgba(10,11,10,.72); box-shadow: 0 20px 50px rgba(0,0,0,.35);
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); will-change: transform;
     }
     .card-track img { display: block; width: auto; height: 100%; max-width: none; }
     .scroll-cue {
-      position: absolute; z-index: 2; left: 50%;
-      bottom: clamp(18px, 3svh, 34px);
-      width: 20px; height: 32px;
-      border: 1px solid rgba(255, 255, 255, .48); border-radius: 12px;
-      transform: translateX(-50%); pointer-events: none;
+      position: absolute; z-index: 2; left: 50%; bottom: clamp(18px,3svh,34px);
+      width: 20px; height: 32px; border: 1px solid rgba(255,255,255,.48);
+      border-radius: 12px; transform: translateX(-50%); pointer-events: none;
       transition: opacity .25s ease;
     }
     .scroll-cue i {
-      position: absolute; left: 50%; top: 7px;
-      width: 2px; height: 6px; border-radius: 2px;
-      background: #fff; transform: translateX(-50%);
+      position: absolute; left: 50%; top: 7px; width: 2px; height: 6px;
+      border-radius: 2px; background: #fff; transform: translateX(-50%);
       animation: magma-cue 1.5s ease-in-out infinite;
     }
     @keyframes magma-cue {
-      0%, 100% { opacity: .35; transform: translate(-50%, 0); }
-      55% { opacity: 1; transform: translate(-50%, 10px); }
+      0%,100% { opacity:.35; transform:translate(-50%,0); }
+      55% { opacity:1; transform:translate(-50%,10px); }
     }
 
-    /* ============ DIVIDER ============ */
+    /* Divider */
     .section-divider {
-      position: relative; z-index: 2; height: 1px;
-      background: linear-gradient(90deg,
-        transparent 0%, rgba(255,255,255,0.06) 20%,
-        rgba(255,255,255,0.12) 50%, rgba(255,255,255,0.06) 80%,
-        transparent 100%
-      );
+      height: 1px;
+      background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.06) 20%,
+        rgba(255,255,255,0.12) 50%, rgba(255,255,255,0.06) 80%, transparent 100%);
     }
 
-    /* ============ SECTION 2: CINEMATIC CAD TEXT OVERLAYS ============ */
-    .magma-cinema {
-      position: relative; height: 400vh;
-      background: var(--mx-bg-deep);
-    }
-    .cinema-sticky {
-      position: sticky; top: 0; height: 100vh;
-      overflow: hidden; background: var(--mx-bg-deep);
-    }
-    .cinema-canvas-wrap {
-      position: absolute; inset: 0;
-    }
-    #cinemaCanvas {
-      position: absolute; inset: 0;
-      width: 100%; height: 100%; display: block;
-    }
-
-    /* Gradient overlay for text readability */
+    /* ============ SECTION 2 ============ */
+    .magma-cinema { position: relative; height: 400vh; background: var(--mx-bg-deep); }
+    .cinema-sticky { position: sticky; top: 0; height: 100vh; overflow: hidden; background: var(--mx-bg-deep); }
+    .cinema-canvas-wrap { position: absolute; inset: 0; }
+    #cinemaCanvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
     .cinema-overlay {
-      position: absolute; inset: 0; z-index: 1;
-      background: linear-gradient(
-        to right,
-        rgba(0, 0, 0, 0.55) 0%,
-        rgba(0, 0, 0, 0.15) 55%,
-        rgba(0, 0, 0, 0.05) 100%
-      );
-      pointer-events: none;
+      position: absolute; inset: 0; z-index: 1; pointer-events: none;
+      background: linear-gradient(to right, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.15) 55%, rgba(0,0,0,0.05) 100%);
     }
-
-    /* Text layer */
+    .cinema-progress-rail {
+      position: absolute; right: 6%; top: 50%; transform: translateY(-50%);
+      width: 2px; height: 30vh; background: rgba(255,255,255,0.08);
+      z-index: 5; overflow: hidden; border-radius: 1px;
+    }
+    .cinema-progress-fill {
+      position: absolute; top: 0; left: 0; width: 100%; height: 0%;
+      background: rgba(255,255,255,0.5); border-radius: 1px; transition: height 0.15s linear;
+    }
+    .cinema-progress-dots {
+      position: absolute; right: calc(6% + 8px); top: 50%; transform: translateY(-50%);
+      height: 30vh; z-index: 5; display: flex; flex-direction: column; justify-content: space-between;
+    }
+    .cinema-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: rgba(255,255,255,0.15);
+      transition: background 0.3s ease, transform 0.3s ease;
+    }
+    .cinema-dot.is-active { background: rgba(255,255,255,0.7); transform: scale(1.4); }
     .cinema-text-layer {
-      position: absolute; left: 0; top: 0;
-      width: 100%; height: 100%;
+      position: absolute; left: 0; top: 0; width: 100%; height: 100%;
       pointer-events: none; z-index: 5;
     }
     .cinema-text-block {
-      position: absolute; left: 6%; bottom: 12%;
-      max-width: min(560px, 42vw);
+      position: absolute; left: 6%; bottom: 12%; max-width: min(560px, 42vw);
       opacity: 0; transform: translateY(24px);
-      transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
-                  transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-      will-change: opacity, transform;
+      transition: opacity 0.6s cubic-bezier(0.16,1,0.3,1), transform 0.6s cubic-bezier(0.16,1,0.3,1);
     }
-    .cinema-text-block.is-active {
-      opacity: 1; transform: translateY(0);
-    }
+    .cinema-text-block.is-active { opacity: 1; transform: translateY(0); }
     .cinema-eyebrow {
-      font-size: clamp(10px, 1vw, 12px);
-      letter-spacing: 0.18em; text-transform: uppercase;
-      color: var(--mx-text-secondary);
-      margin: 0 0 0.8em 0; font-weight: 500;
+      font-size: clamp(10px,1vw,12px); letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--mx-text-dim); margin: 0 0 0.8em 0; font-weight: 500;
     }
     .cinema-headline {
-      font-size: clamp(28px, 3.8vw, 56px);
-      line-height: 1.05; font-weight: 700;
-      letter-spacing: -0.02em; margin: 0;
-      text-transform: uppercase;
+      font-size: clamp(28px,3.8vw,56px); line-height: 1.05; font-weight: 700;
+      letter-spacing: -0.02em; margin: 0; text-transform: uppercase;
       background: linear-gradient(180deg, #ffffff 20%, #7a7a7a 100%);
       -webkit-background-clip: text; background-clip: text;
       color: transparent; -webkit-text-fill-color: transparent;
     }
     .cinema-subtext {
-      margin: 1em 0 0 0;
-      font-size: clamp(13px, 1.15vw, 16px);
-      line-height: 1.55; font-weight: 400;
-      color: var(--mx-text-secondary);
-      max-width: 32ch;
+      margin: 1em 0 0 0; font-size: clamp(13px,1.15vw,16px);
+      line-height: 1.55; font-weight: 400; color: var(--mx-text-dim); max-width: 32ch;
     }
 
-    /* Progress rail */
-    .cinema-progress-rail {
-      position: absolute; right: 6%; top: 50%;
-      transform: translateY(-50%);
-      width: 2px; height: 30vh;
-      background: rgba(255, 255, 255, 0.08);
-      z-index: 5; overflow: hidden;
-      border-radius: 1px;
-    }
-    .cinema-progress-fill {
-      position: absolute; top: 0; left: 0;
-      width: 100%; height: 0%;
-      background: rgba(255, 255, 255, 0.5);
-      border-radius: 1px;
-      transition: height 0.15s linear;
-    }
-
-    /* Progress step dots */
-    .cinema-progress-dots {
-      position: absolute; right: calc(6% + 8px); top: 50%;
-      transform: translateY(-50%);
-      height: 30vh; z-index: 5;
-      display: flex; flex-direction: column;
-      justify-content: space-between;
-    }
-    .cinema-dot {
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.15);
-      transition: background 0.3s ease, transform 0.3s ease;
-    }
-    .cinema-dot.is-active {
-      background: rgba(255, 255, 255, 0.7);
-      transform: scale(1.4);
-    }
-
-    /* ============ RESPONSIVE ============ */
     @media (max-width: 760px) {
       .magma-scroll { height: 600vh; }
-      .card-track {
-        top: clamp(70px, 16svh, 126px);
-        height: clamp(88px, 22vw, 142px); padding: 3px;
-      }
-      .cinema-text-block {
-        left: 6%; bottom: 10%; max-width: 85vw;
-      }
-      .cinema-headline { font-size: clamp(24px, 6.5vw, 36px); }
+      .card-track { top: clamp(70px,16svh,126px); height: clamp(88px,22vw,142px); padding: 3px; }
+      .cinema-text-block { left: 6%; bottom: 10%; max-width: 85vw; }
+      .cinema-headline { font-size: clamp(24px,6.5vw,36px); }
       .cinema-progress-rail, .cinema-progress-dots { display: none; }
+      .intro-explore { width: 88px; height: 88px; }
     }
-
-    /* ============ ACCESSIBILITY ============ */
     @media (prefers-reduced-motion: reduce) {
       .magma-scroll { height: 100svh; }
       .magma-cinema { height: 100vh; }
       .scroll-cue i { animation: none; }
       .cinema-text-block { transition: none; }
+      .intro-explore::before { animation: none; }
     }
   </style>
 </head>
-<body>
+<body class="intro-active">
 
-  <!-- ========== SECTION 1: SCROLL-FRAME + FEATURE CARDS ========== -->
+  <!-- ==================== CINEMATIC INTRO ==================== -->
+  <div class="intro" id="intro">
+    <canvas class="intro-canvas" id="introCanvas"></canvas>
+
+    <div class="intro-watermark" id="introWatermark">MAGMA</div>
+
+    <div class="intro-flash" id="introFlash"></div>
+
+    <!-- Cursor (desktop only) -->
+    <div class="intro-cursor" id="introCursor">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M5 3L19 12L12 13.5L9 21L5 3Z" fill="white" stroke="white" stroke-width="0.5"/>
+      </svg>
+    </div>
+
+    <!-- Circular Explore button -->
+    <button class="intro-explore" id="introExplore" aria-label="Explore MAGMA X1">
+      <span>Explore</span>
+    </button>
+
+    <!-- Mobile tap hint -->
+    <p class="intro-tap-hint" id="introTapHint">Tap to explore</p>
+  </div>
+
+  <!-- ==================== SECTION 1 ==================== -->
   <main class="magma-scroll" id="magmaScroll" aria-label="MAGMA X1 product reveal">
     <section class="magma-sticky">
       <canvas class="sequence" id="sequenceCanvas" aria-hidden="true"></canvas>
@@ -225,26 +285,17 @@
 
   <div class="section-divider"></div>
 
-  <!-- ========== SECTION 2: CAD CINEMATIC ========== -->
-  <section class="magma-cinema" id="magmaCinema" aria-label="MAGMA X1 engineering details">
+  <!-- ==================== SECTION 2 ==================== -->
+  <section class="magma-cinema" id="magmaCinema" aria-label="MAGMA X1 engineering">
     <div class="cinema-sticky">
-      <div class="cinema-canvas-wrap">
-        <canvas id="cinemaCanvas" aria-hidden="true"></canvas>
-      </div>
+      <div class="cinema-canvas-wrap"><canvas id="cinemaCanvas" aria-hidden="true"></canvas></div>
       <div class="cinema-overlay"></div>
-
-      <div class="cinema-progress-rail">
-        <div class="cinema-progress-fill" id="cinemaProgressFill"></div>
-      </div>
+      <div class="cinema-progress-rail"><div class="cinema-progress-fill" id="cinemaProgressFill"></div></div>
       <div class="cinema-progress-dots">
-        <div class="cinema-dot" data-step="0"></div>
-        <div class="cinema-dot" data-step="1"></div>
-        <div class="cinema-dot" data-step="2"></div>
-        <div class="cinema-dot" data-step="3"></div>
-        <div class="cinema-dot" data-step="4"></div>
-        <div class="cinema-dot" data-step="5"></div>
+        <div class="cinema-dot" data-step="0"></div><div class="cinema-dot" data-step="1"></div>
+        <div class="cinema-dot" data-step="2"></div><div class="cinema-dot" data-step="3"></div>
+        <div class="cinema-dot" data-step="4"></div><div class="cinema-dot" data-step="5"></div>
       </div>
-
       <div class="cinema-text-layer">
         <div class="cinema-text-block" id="ct1">
           <p class="cinema-eyebrow">01 — Blueprint</p>
@@ -278,144 +329,284 @@
   </section>
 
   <script>
-  /* ============ SECTION 1: SCROLL-FRAME + FEATURE CARDS ============ */
+  /* ================================================================
+     CINEMATIC INTRO
+     Timeline: Rock → Blast → Flash → Bicycle → Cursor → Explore
+     ================================================================ */
   (() => {
-    const frameCount = 17;
-    const framePath = (i) => `./assets/frames/ezgif-frame-${String(i + 1).padStart(3, "0")}.webp`;
+    const intro      = document.getElementById("intro");
+    const canvas     = document.getElementById("introCanvas");
+    const ctx        = canvas.getContext("2d", { alpha: false });
+    const watermark  = document.getElementById("introWatermark");
+    const flash      = document.getElementById("introFlash");
+    const cursor     = document.getElementById("introCursor");
+    const explore    = document.getElementById("introExplore");
+    const tapHint    = document.getElementById("introTapHint");
+    const isMobile   = window.matchMedia("(pointer: coarse)").matches;
+
+    const ROCK_COUNT = 22;
+    const BIKE_COUNT = 31;
+    const rockPath   = i => `./assets/intro/rock/frame-${String(i+1).padStart(3,"0")}.webp`;
+    const bikePath   = i => `./assets/intro/bike/frame-${String(i+1).padStart(3,"0")}.webp`;
+
+    const rockFrames = [];
+    const bikeFrames = [];
+    let rockLoaded = 0, bikeLoaded = 0;
+    let sequenceStarted = false;
+
+    // --- Size canvas ---
+    function sizeCanvas() {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width  = Math.round(window.innerWidth * dpr);
+      canvas.height = Math.round(window.innerHeight * dpr);
+    }
+    sizeCanvas();
+    window.addEventListener("resize", sizeCanvas);
+
+    // --- Draw a frame (cover-fit, centered, on black bg) ---
+    function drawFrame(img) {
+      if (!img || !img.complete || !img.naturalWidth) return;
+      const cw = canvas.width, ch = canvas.height;
+      const scale = Math.max(cw / img.naturalWidth, ch / img.naturalHeight);
+      const w = img.naturalWidth * scale, h = img.naturalHeight * scale;
+      ctx.fillStyle = "#000";
+      ctx.fillRect(0, 0, cw, ch);
+      ctx.drawImage(img, (cw - w) / 2, (ch - h) / 2, w, h);
+    }
+
+    // --- Preload images ---
+    function loadImages(paths, count, arr, onProgress, onDone) {
+      let loaded = 0;
+      for (let i = 0; i < count; i++) {
+        const img = new Image();
+        img.decoding = "async";
+        img.onload = () => {
+          loaded++;
+          onProgress(loaded, count);
+          if (loaded === count) onDone();
+        };
+        img.onerror = img.onload; // skip broken frames
+        img.src = paths(i);
+        arr.push(img);
+      }
+    }
+
+    // Load rock first, then bike
+    loadImages(rockPath, ROCK_COUNT, rockFrames,
+      (n) => { rockLoaded = n; },
+      () => {
+        // Rock loaded → start loading bike
+        loadImages(bikePath, BIKE_COUNT, bikeFrames,
+          (n) => { bikeLoaded = n; },
+          () => { if (!sequenceStarted) startSequence(); }
+        );
+        // Start sequence when rock is ready (don't wait for bike)
+        if (!sequenceStarted) startSequence();
+      }
+    );
+
+    // --- Animation timeline ---
+    function startSequence() {
+      sequenceStarted = true;
+
+      // Draw first rock frame immediately
+      drawFrame(rockFrames[0]);
+
+      const timeline = [
+        // Phase 1: Show MAGMA watermark + hold frame 0
+        { at: 300,  fn: () => watermark.classList.add("is-visible") },
+
+        // Phase 2: Play rock frames 0-21 over ~2.2s (100ms per frame)
+        ...Array.from({ length: ROCK_COUNT }, (_, i) => ({
+          at: 600 + i * 100,
+          fn: () => drawFrame(rockFrames[i])
+        })),
+
+        // Phase 3: Flash at blast peak
+        { at: 600 + ROCK_COUNT * 100, fn: () => {
+          watermark.classList.add("is-fading");
+          flash.style.transition = "opacity 0.15s ease";
+          flash.style.opacity = "0.7";
+        }},
+        { at: 600 + ROCK_COUNT * 100 + 200, fn: () => {
+          flash.style.transition = "opacity 0.5s ease";
+          flash.style.opacity = "0";
+        }},
+
+        // Phase 4: Play bike frames 0-30 over ~2.5s (~80ms per frame)
+        ...Array.from({ length: BIKE_COUNT }, (_, i) => ({
+          at: 600 + ROCK_COUNT * 100 + 300 + i * 80,
+          fn: () => {
+            if (bikeFrames[i] && bikeFrames[i].complete) {
+              drawFrame(bikeFrames[i]);
+            }
+          }
+        })),
+
+        // Phase 5: Hold final bike frame — show cursor (desktop) or explore (mobile)
+        { at: 600 + ROCK_COUNT * 100 + 300 + BIKE_COUNT * 80 + 400, fn: () => {
+          if (isMobile) {
+            // Mobile: show explore directly
+            explore.classList.add("is-visible");
+            tapHint.classList.add("is-visible");
+          } else {
+            // Desktop: animate cursor
+            showCursor();
+          }
+        }},
+      ];
+
+      // Execute timeline
+      timeline.forEach(({ at, fn }) => setTimeout(fn, at));
+    }
+
+    // --- Cursor animation (desktop only) ---
+    function showCursor() {
+      const cx = window.innerWidth / 2;
+      const cy = window.innerHeight / 2;
+
+      // Start cursor off-screen right
+      cursor.style.left = (window.innerWidth + 40) + "px";
+      cursor.style.top = (cy + 60) + "px";
+      cursor.style.opacity = "1";
+      cursor.style.transition = "left 1s cubic-bezier(0.33, 0, 0.2, 1), top 1s cubic-bezier(0.33, 0, 0.2, 1)";
+
+      // Move to center
+      requestAnimationFrame(() => {
+        cursor.style.left = cx + "px";
+        cursor.style.top = cy + "px";
+      });
+
+      // Click animation
+      setTimeout(() => {
+        cursor.classList.add("is-clicking");
+        setTimeout(() => {
+          cursor.classList.remove("is-clicking");
+          cursor.style.opacity = "0";
+          // Show explore button
+          explore.classList.add("is-visible");
+        }, 250);
+      }, 1200);
+    }
+
+    // --- Explore click handler ---
+    explore.addEventListener("click", () => {
+      explore.style.transform = "translate(-50%, -50%) scale(1.5)";
+      explore.style.opacity = "0";
+      tapHint.style.opacity = "0";
+
+      // Cinematic exit
+      setTimeout(() => {
+        intro.classList.add("is-exiting");
+        document.body.classList.remove("intro-active");
+      }, 200);
+
+      setTimeout(() => {
+        intro.classList.add("is-hidden");
+        window.scrollTo(0, 0);
+      }, 1200);
+    });
+  })();
+
+
+  /* ================================================================
+     SECTION 1: SCROLL-FRAME + FEATURE CARDS
+     ================================================================ */
+  (() => {
+    const count = 17;
+    const path = i => `./assets/frames/ezgif-frame-${String(i+1).padStart(3,"0")}.webp`;
     const canvas = document.getElementById("sequenceCanvas");
     const ctx = canvas.getContext("2d", { alpha: false });
     const section = document.getElementById("magmaScroll");
     const track = document.getElementById("cardTrack");
     const cue = document.getElementById("scrollCue");
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const frames = Array.from({ length: frameCount }, () => new Image());
-    let requestedFrame = -1, progress = 0, raf = 0;
+    const rm = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const frames = Array.from({ length: count }, () => new Image());
+    let rf = -1, p = 0, raf = 0;
 
-    function loadFrame(i) {
-      const img = frames[i];
-      if (img.src) return;
-      img.decoding = "async";
-      img.src = framePath(i);
-      img.onload = () => {
-        if (i === 0 || i === Math.round(progress * (frameCount - 1))) req();
-      };
+    function load(i) {
+      const img = frames[i]; if (img.src) return;
+      img.decoding = "async"; img.src = path(i);
+      img.onload = () => { if (i===0||i===Math.round(p*(count-1))) req(); };
     }
-    loadFrame(0);
-    const loadAll = () => frames.forEach((_, i) => loadFrame(i));
-    window.requestIdleCallback ? window.requestIdleCallback(loadAll, { timeout: 1200 }) : setTimeout(loadAll, 250);
+    load(0);
+    const la = () => frames.forEach((_,i) => load(i));
+    window.requestIdleCallback ? window.requestIdleCallback(la,{timeout:1200}) : setTimeout(la,250);
 
-    function sizeCanvas() {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const w = Math.round(window.innerWidth * dpr), h = Math.round(window.innerHeight * dpr);
-      if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; requestedFrame = -1; }
+    function sz() {
+      const d=Math.min(window.devicePixelRatio||1,2);
+      const w=Math.round(window.innerWidth*d),h=Math.round(window.innerHeight*d);
+      if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;rf=-1;}
     }
-    function draw(idx) {
-      const img = frames[idx];
-      if (!img.complete || !img.naturalWidth) return;
-      const cw = canvas.width, ch = canvas.height;
-      const s = Math.max(cw / img.naturalWidth, ch / img.naturalHeight);
-      ctx.fillStyle = "#1e1e1c"; ctx.fillRect(0, 0, cw, ch);
-      ctx.drawImage(img, (cw - img.naturalWidth * s) / 2, (ch - img.naturalHeight * s) / 2, img.naturalWidth * s, img.naturalHeight * s);
-      requestedFrame = idx;
+    function dr(idx) {
+      const img=frames[idx]; if(!img.complete||!img.naturalWidth) return;
+      const cw=canvas.width,ch=canvas.height,s=Math.max(cw/img.naturalWidth,ch/img.naturalHeight);
+      ctx.fillStyle="#1e1e1c"; ctx.fillRect(0,0,cw,ch);
+      ctx.drawImage(img,(cw-img.naturalWidth*s)/2,(ch-img.naturalHeight*s)/2,img.naturalWidth*s,img.naturalHeight*s);
+      rf=idx;
     }
-    function update() {
-      raf = 0; sizeCanvas();
-      const bounds = section.getBoundingClientRect();
-      const dist = Math.max(1, section.offsetHeight - window.innerHeight);
-      const raw = Math.min(1, Math.max(0, -bounds.top / dist));
-      progress = reduceMotion.matches ? 0 : Math.min(1, raw / .84);
-      const frame = Math.round(progress * (frameCount - 1));
-      loadFrame(frame);
-      if (frame !== requestedFrame) draw(frame);
-      cue.style.opacity = raw > .035 ? "0" : "1";
-      const start = window.innerWidth * 1.04, end = -track.offsetWidth - window.innerWidth * .04;
-      track.style.transform = `translate3d(${start + (end - start) * progress}px, 0, 0)`;
+    function up() {
+      raf=0; sz();
+      const b=section.getBoundingClientRect(),d=Math.max(1,section.offsetHeight-window.innerHeight);
+      const raw=Math.min(1,Math.max(0,-b.top/d));
+      p=rm.matches?0:Math.min(1,raw/.84);
+      const f=Math.round(p*(count-1)); load(f);
+      if(f!==rf) dr(f);
+      cue.style.opacity=raw>.035?"0":"1";
+      const st=window.innerWidth*1.04,en=-track.offsetWidth-window.innerWidth*.04;
+      track.style.transform=`translate3d(${st+(en-st)*p}px,0,0)`;
     }
-    function req() { if (!raf) raf = requestAnimationFrame(update); }
-    window.addEventListener("scroll", req, { passive: true });
-    window.addEventListener("resize", req, { passive: true });
-    reduceMotion.addEventListener?.("change", req);
-    req();
+    function req(){if(!raf)raf=requestAnimationFrame(up);}
+    window.addEventListener("scroll",req,{passive:true});
+    window.addEventListener("resize",req,{passive:true});
+    rm.addEventListener?.("change",req); req();
   })();
 
-  /* ============ SECTION 2: CAD CINEMATIC ============ */
+
+  /* ================================================================
+     SECTION 2: CAD CINEMATIC
+     ================================================================ */
   (() => {
-    const frameCount = 20;
-    const framePath = (i) => `./assets/cad-frames/ezgif-frame-${String(i + 1).padStart(3, "0")}.webp`;
+    const count = 20;
+    const path = i => `./assets/cad-frames/ezgif-frame-${String(i+1).padStart(3,"0")}.webp`;
     const canvas = document.getElementById("cinemaCanvas");
     const ctx = canvas.getContext("2d", { alpha: false });
     const section = document.getElementById("magmaCinema");
-    const progressFill = document.getElementById("cinemaProgressFill");
+    const pf = document.getElementById("cinemaProgressFill");
     const dots = document.querySelectorAll(".cinema-dot");
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const frames = Array.from({ length: frameCount }, () => new Image());
-    let requestedFrame = -1, progress = 0, raf = 0;
+    const rm = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const frames = Array.from({ length: count }, () => new Image());
+    let rf = -1, p = 0, raf = 0;
 
-    const textBlocks = [
-      { el: document.getElementById("ct1"), start: 0.00, end: 0.16 },
-      { el: document.getElementById("ct2"), start: 0.16, end: 0.33 },
-      { el: document.getElementById("ct3"), start: 0.33, end: 0.50 },
-      { el: document.getElementById("ct4"), start: 0.50, end: 0.66 },
-      { el: document.getElementById("ct5"), start: 0.66, end: 0.83 },
-      { el: document.getElementById("ct6"), start: 0.83, end: 1.01 },
+    const steps = [
+      {start:0,end:.16},{start:.16,end:.33},{start:.33,end:.50},
+      {start:.50,end:.66},{start:.66,end:.83},{start:.83,end:1.01}
     ];
+    const tbs = Array.from(document.querySelectorAll(".cinema-text-block"));
 
-    function loadFrame(i) {
-      const img = frames[i];
-      if (img.src) return;
-      img.decoding = "async";
-      img.src = framePath(i);
-      img.onload = () => {
-        if (i === 0 || i === Math.round(progress * (frameCount - 1))) req();
-      };
-    }
-    loadFrame(0);
-    const loadAll = () => frames.forEach((_, i) => loadFrame(i));
-    window.requestIdleCallback ? window.requestIdleCallback(loadAll, { timeout: 2000 }) : setTimeout(loadAll, 500);
+    function load(i){const img=frames[i];if(img.src)return;img.decoding="async";img.src=path(i);img.onload=()=>{if(i===0||i===Math.round(p*(count-1)))req();};}
+    load(0);
+    const la=()=>frames.forEach((_,i)=>load(i));
+    window.requestIdleCallback?window.requestIdleCallback(la,{timeout:2000}):setTimeout(la,500);
 
-    function sizeCanvas() {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const w = Math.round(window.innerWidth * dpr), h = Math.round(window.innerHeight * dpr);
-      if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; requestedFrame = -1; }
+    function sz(){const d=Math.min(window.devicePixelRatio||1,2);const w=Math.round(window.innerWidth*d),h=Math.round(window.innerHeight*d);if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;rf=-1;}}
+    function dr(idx){const img=frames[idx];if(!img.complete||!img.naturalWidth)return;const cw=canvas.width,ch=canvas.height,s=Math.max(cw/img.naturalWidth,ch/img.naturalHeight);ctx.fillStyle="#0a0a0a";ctx.fillRect(0,0,cw,ch);ctx.drawImage(img,(cw-img.naturalWidth*s)/2,(ch-img.naturalHeight*s)/2,img.naturalWidth*s,img.naturalHeight*s);rf=idx;}
+    function up(){
+      raf=0;sz();
+      const b=section.getBoundingClientRect(),d=Math.max(1,section.offsetHeight-window.innerHeight);
+      const raw=Math.min(1,Math.max(0,-b.top/d));
+      p=rm.matches?0:raw;
+      const f=Math.round(p*(count-1));load(f);if(f!==rf)dr(f);
+      pf.style.height=`${p*100}%`;
+      let ai=-1;
+      tbs.forEach((el,i)=>{const a=p>=steps[i].start&&p<steps[i].end;el.classList.toggle("is-active",a);if(a)ai=i;});
+      dots.forEach((d,i)=>d.classList.toggle("is-active",i===ai));
     }
-    function draw(idx) {
-      const img = frames[idx];
-      if (!img.complete || !img.naturalWidth) return;
-      const cw = canvas.width, ch = canvas.height;
-      const s = Math.max(cw / img.naturalWidth, ch / img.naturalHeight);
-      ctx.fillStyle = "#0a0a0a"; ctx.fillRect(0, 0, cw, ch);
-      ctx.drawImage(img, (cw - img.naturalWidth * s) / 2, (ch - img.naturalHeight * s) / 2, img.naturalWidth * s, img.naturalHeight * s);
-      requestedFrame = idx;
-    }
-    function update() {
-      raf = 0; sizeCanvas();
-      const bounds = section.getBoundingClientRect();
-      const dist = Math.max(1, section.offsetHeight - window.innerHeight);
-      const raw = Math.min(1, Math.max(0, -bounds.top / dist));
-      progress = reduceMotion.matches ? 0 : raw;
-      const frame = Math.round(progress * (frameCount - 1));
-      loadFrame(frame);
-      if (frame !== requestedFrame) draw(frame);
-
-      // Progress rail
-      progressFill.style.height = `${progress * 100}%`;
-
-      // Text blocks & dots
-      let activeIdx = -1;
-      textBlocks.forEach(({ el, start, end }, i) => {
-        const active = progress >= start && progress < end;
-        el.classList.toggle("is-active", active);
-        if (active) activeIdx = i;
-      });
-      dots.forEach((dot, i) => dot.classList.toggle("is-active", i === activeIdx));
-    }
-    function req() { if (!raf) raf = requestAnimationFrame(update); }
-    window.addEventListener("scroll", req, { passive: true });
-    window.addEventListener("resize", req, { passive: true });
-    reduceMotion.addEventListener?.("change", req);
-    req();
+    function req(){if(!raf)raf=requestAnimationFrame(up);}
+    window.addEventListener("scroll",req,{passive:true});
+    window.addEventListener("resize",req,{passive:true});
+    rm.addEventListener?.("change",req);req();
   })();
   </script>
-
 </body>
 </html>
