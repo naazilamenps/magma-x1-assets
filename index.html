@@ -64,11 +64,24 @@
     .intro-tap-hint { position:absolute; z-index:12; left:50%; top:calc(50% + 70px); transform:translateX(-50%); font-size:10px; letter-spacing:0.14em; text-transform:uppercase; color:var(--mx-text-dim); opacity:0; transition:opacity 0.6s ease; pointer-events:none; }
     .intro-tap-hint.is-visible { opacity:0.6; }
 
+    /* Moving cycle GIF overlay — inherits canvas position exactly */
+    .intro-gif {
+      position:absolute; z-index:3; top:0; left:0; width:100%; height:100%;
+      display:none; pointer-events:none;
+    }
+    .intro-gif img {
+      position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+      max-width:100%; max-height:100%; width:auto; height:auto;
+      object-fit:contain;
+    }
+    .intro-gif.is-active { display:block; }
+
     /* Burst state: expand canvas, hide text */
     .intro.is-burst .intro-brand, .intro.is-burst .intro-watermark,
     .intro.is-burst .intro-bottom, .intro.is-burst .intro-prompt,
     .intro.is-burst .intro-progress { opacity:0 !important; transition:opacity 0.4s ease; }
     .intro.is-burst .intro-canvas { width:100%; height:100%; top:0; left:0; transform:none; cursor:default; transition:width 0.5s ease, height 0.5s ease, top 0.5s ease, left 0.5s ease, transform 0.5s ease; }
+    .intro.is-burst .intro-gif { position:absolute; inset:0; }
 
     @keyframes fadeIn { to { opacity:1; } }
     @keyframes pulse-text { 0%,100%{opacity:0.3;} 50%{opacity:0.6;} }
@@ -107,6 +120,10 @@
 
     <p class="intro-prompt" id="introPrompt">Press &amp; hold to transform</p>
     <div class="intro-flash" id="introFlash"></div>
+    <!-- Moving cycle GIF (hidden, shown after bike frames complete) -->
+    <div class="intro-gif" id="introGif">
+      <img src="./assets/intro/magma-cycle.gif" alt="MAGMA X1 in motion" />
+    </div>
     <div class="intro-cursor" id="introCursor"><svg viewBox="0 0 24 24" fill="none"><path d="M5 3L19 12L12 13.5L9 21L5 3Z" fill="white" stroke="white" stroke-width="0.5"/></svg></div>
     <button class="intro-explore" id="introExplore" aria-label="Explore MAGMA X1"><span>Explore</span></button>
     <p class="intro-tap-hint" id="introTapHint">Tap to explore</p>
@@ -281,6 +298,9 @@
     }
 
     // --- Bike sequence (auto-plays, not reversible) ---
+    // After last frame, swap to moving GIF at same position/scale
+    const gifContainer = document.getElementById("introGif");
+
     function playBikeSequence() {
       let frame = 0;
       const interval = setInterval(() => {
@@ -296,6 +316,9 @@
         frame++;
         if (frame >= BIKE_COUNT) {
           clearInterval(interval);
+          // Seamlessly swap canvas → moving GIF at exact same position
+          gifContainer.classList.add("is-active");
+          canvas.style.opacity = "0";
           setTimeout(showInteraction, 500);
         }
       }, 75);
@@ -369,7 +392,7 @@
   (() => {const C=17,P=i=>`./assets/frames/ezgif-frame-${String(i+1).padStart(3,"0")}.webp`;const cv=document.getElementById("sequenceCanvas"),cx=cv.getContext("2d",{alpha:false});const sc=document.getElementById("magmaScroll"),tr=document.getElementById("cardTrack"),cu=document.getElementById("scrollCue");const rm=window.matchMedia("(prefers-reduced-motion:reduce)"),fr=Array.from({length:C},()=>new Image());let rf=-1,p=0,ra=0;function ld(i){const m=fr[i];if(m.src)return;m.decoding="async";m.src=P(i);m.onload=()=>{if(i===0||i===Math.round(p*(C-1)))rq();};}ld(0);const la=()=>fr.forEach((_,i)=>ld(i));window.requestIdleCallback?window.requestIdleCallback(la,{timeout:1200}):setTimeout(la,250);function sz(){const d=Math.min(window.devicePixelRatio||1,2),w=Math.round(window.innerWidth*d),h=Math.round(window.innerHeight*d);if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h;rf=-1;}}function dr(i){const m=fr[i];if(!m.complete||!m.naturalWidth)return;const cw=cv.width,ch=cv.height,s=Math.max(cw/m.naturalWidth,ch/m.naturalHeight);cx.fillStyle="#1e1e1c";cx.fillRect(0,0,cw,ch);cx.drawImage(m,(cw-m.naturalWidth*s)/2,(ch-m.naturalHeight*s)/2,m.naturalWidth*s,m.naturalHeight*s);rf=i;}function up(){ra=0;sz();const b=sc.getBoundingClientRect(),d=Math.max(1,sc.offsetHeight-window.innerHeight),rw=Math.min(1,Math.max(0,-b.top/d));p=rm.matches?0:Math.min(1,rw/.84);const f=Math.round(p*(C-1));ld(f);if(f!==rf)dr(f);cu.style.opacity=rw>.035?"0":"1";const st=window.innerWidth*1.04,en=-tr.offsetWidth-window.innerWidth*.04;tr.style.transform=`translate3d(${st+(en-st)*p}px,0,0)`;}function rq(){if(!ra)ra=requestAnimationFrame(up);}window.addEventListener("scroll",rq,{passive:true});window.addEventListener("resize",rq,{passive:true});rm.addEventListener?.("change",rq);rq();})();
 
   /* ============ SECTION 2 ============ */
-  (() => {const C=20,P=i=>`./assets/cad-frames/ezgif-frame-${String(i+1).padStart(3,"0")}.webp`;const cv=document.getElementById("cinemaCanvas"),cx=cv.getContext("2d",{alpha:false});const sc=document.getElementById("magmaCinema"),pf=document.getElementById("cinemaProgressFill");const dots=document.querySelectorAll(".cinema-dot"),rm=window.matchMedia("(prefers-reduced-motion:reduce)");const fr=Array.from({length:C},()=>new Image());const st=[{s:0,e:.16},{s:.16,e:.33},{s:.33,e:.50},{s:.50,e:.66},{s:.66,e:.83},{s:.83,e:1.01}];const tb=Array.from(document.querySelectorAll(".cinema-text-block"));let rf=-1,p=0,ra=0;function ld(i){const m=fr[i];if(m.src)return;m.decoding="async";m.src=P(i);m.onload=()=>{if(i===0||i===Math.round(p*(C-1)))rq();};}ld(0);const la=()=>fr.forEach((_,i)=>ld(i));window.requestIdleCallback?window.requestIdleCallback(la,{timeout:2000}):setTimeout(la,500);function sz(){const d=Math.min(window.devicePixelRatio||1,2),w=Math.round(window.innerWidth*d),h=Math.round(window.innerHeight*d);if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h;rf=-1;}}function dr(i){const m=fr[i];if(!m.complete||!m.naturalWidth)return;const cw=cv.width,ch=cv.height,s=Math.max(cw/m.naturalWidth,ch/m.naturalHeight);cx.fillStyle="#0a0a0a";cx.fillRect(0,0,cw,ch);cx.drawImage(m,(cw-m.naturalWidth*s)/2,(ch-m.naturalHeight*s)/2,m.naturalWidth*s,m.naturalHeight*s);rf=i;}function up(){ra=0;sz();const b=sc.getBoundingClientRect(),d=Math.max(1,sc.offsetHeight-window.innerHeight),rw=Math.min(1,Math.max(0,-b.top/d));p=rm.matches?0:rw;const f=Math.round(p*(C-1));ld(f);if(f!==rf)dr(f);pf.style.height=`${p*100}%`;let ai=-1;tb.forEach((el,i)=>{const a=p>=st[i].s&&p<st[i].e;el.classList.toggle("is-active",a);if(a)ai=i;});dots.forEach((d,i)=>d.classList.toggle("is-active",i===ai));}function rq(){if(!ra)ra=requestAnimationFrame(up);}window.addEventListener("scroll",rq,{passive:true});window.addEventListener("resize",rq,{passive:true});rm.addEventListener?.("change",rq);rq();})();
+  (() => {const C=20,P=i=>`./assets/cad-frames/ezgif-frame-${String(i+1).padStart(3,"0")}.webp`;const cv=document.getElementById("cinemaCanvas"),cx=cv.getContext("2d",{alpha:false});const sc=document.getElementById("magmaCinema"),pf=document.getElementById("cinemaProgressFill");const dots=document.querySelectorAll(".cinema-dot"),rm=window.matchMedia("(prefers-reduced-motion:reduce)");const fr=Array.from({length:C},()=>new Image());const st=[{s:0,e:.16},{s:.16,e:.33},{s:.33,e:.50},{s:.50,e:.66},{s:.66,e:.83},{s:.83,e:1.01}];const tb=Array.from(document.querySelectorAll(".cinema-text-block"));let rf=-1,p=0,ra=0;function ld(i){const m=fr[i];if(m.src)return;m.decoding="async";m.src=P(i);m.onload=()=>{if(i===0||i===Math.round(p*(C-1)))rq();};}ld(0);const la=()=>fr.forEach((_,i)=>ld(i));window.requestIdleCallback?window.requestIdleCallback(la,{timeout:2000}):setTimeout(la,500);function sz(){const d=Math.min(window.devicePixelRatio||1,2),w=Math.round(window.innerWidth*d),h=Math.round(window.innerHeight*d);if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h;rf=-1;}}function dr(i){const m=fr[i];if(!m.complete||!m.naturalWidth)return;const cw=cv.width,ch=cv.height;cx.fillStyle="#0a0a0a";cx.fillRect(0,0,cw,ch);/* Contain-fit at ~50% scale for generous negative space */const containScale=Math.min(cw/m.naturalWidth,ch/m.naturalHeight)*0.55;const w=m.naturalWidth*containScale,h=m.naturalHeight*containScale;cx.drawImage(m,(cw-w)/2,(ch-h)/2-ch*0.04,w,h);rf=i;}function up(){ra=0;sz();const b=sc.getBoundingClientRect(),d=Math.max(1,sc.offsetHeight-window.innerHeight),rw=Math.min(1,Math.max(0,-b.top/d));p=rm.matches?0:rw;const f=Math.round(p*(C-1));ld(f);if(f!==rf)dr(f);pf.style.height=`${p*100}%`;let ai=-1;tb.forEach((el,i)=>{const a=p>=st[i].s&&p<st[i].e;el.classList.toggle("is-active",a);if(a)ai=i;});dots.forEach((d,i)=>d.classList.toggle("is-active",i===ai));}function rq(){if(!ra)ra=requestAnimationFrame(up);}window.addEventListener("scroll",rq,{passive:true});window.addEventListener("resize",rq,{passive:true});rm.addEventListener?.("change",rq);rq();})();
   </script>
 </body>
 </html>
